@@ -30,4 +30,4 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/dist ./dist
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD node -e "fetch('http://localhost:3000/api/status/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "src/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=prisma/schema.prod.prisma && node src/server.js"]
