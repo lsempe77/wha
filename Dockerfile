@@ -5,8 +5,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 
 # --- Build stage: install all deps (incl devDeps for prisma + vite), build frontend, generate prisma ---
 FROM base AS builder
-# prisma generate only needs the schema; provide a dummy URL so the datasource block validates.
+# prisma generate only needs the schema; provide dummy URLs so datasource blocks validate.
 ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+ENV DIRECT_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 COPY package*.json ./
 RUN npm ci
 COPY prisma ./prisma
@@ -33,4 +34,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/dist ./dist
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD node -e "fetch('http://localhost:3000/api/status/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=prisma/schema.prod.prisma && node src/server.js"]
+# Migrations are NOT run at startup: Prisma's migration engine requires a direct
+# PostgreSQL connection (no PgBouncer), which Render cannot reach on Supabase free tier.
+# Run migrations manually from your local machine before first deploy (see DEPLOYMENT.md).
+CMD ["node", "src/server.js"]
