@@ -1,0 +1,11 @@
+node_modules
+frontend/node_modules
+.env
+*.db
+*.db-journal
+prisma/migrations/dev.db*
+dist
+coverage
+.DS_Store
+*.log
+*.local

@@ -1,0 +1,70 @@
+// Production schema: Postgres. Used via `prisma migrate deploy --schema=prisma/schema.prod.prisma`.
+// Mirrors schema.prisma but with provider = postgresql.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+}
+
+model Campaign {
+  id               String   @id @default(cuid())
+  name             String
+  templateName     String
+  templateLanguage String   @default("es")
+  components       String
+  status          String   @default("PENDING")
+  scheduledAt      DateTime
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  recipients      CampaignRecipient[]
+
+  @@index([status, scheduledAt])
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  name      String?
+  tags      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  recipients CampaignRecipient[]
+}
+
+model CampaignRecipient {
+  id           String   @id @default(cuid())
+  campaignId   String
+  contactId    String
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact      Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status       String   @default("QUEUED")
+  waMessageId  String?
+  waStatus     String?
+  errorMessage String?
+  attempts     Int      @default(0)
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  failedAt     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([campaignId, contactId])
+  @@index([campaignId, status])
+  @@index([contactId])
+}
