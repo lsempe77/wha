@@ -12,7 +12,8 @@ RUN npm ci
 COPY prisma ./prisma
 RUN npx prisma generate --schema=prisma/schema.prod.prisma
 COPY frontend ./frontend
-RUN cd frontend && npm install && npm run build
+# vite is a devDependency; must not skip devDeps during build
+RUN cd frontend && npm install --include=dev && npm run build
 COPY src ./src
 COPY public ./public
 
