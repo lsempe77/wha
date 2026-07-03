@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 
 # --- Build stage: install all deps (incl devDeps for prisma + vite), build frontend, generate prisma ---
 FROM base AS builder
+# prisma generate only needs the schema; provide a dummy URL so the datasource block validates.
+ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 COPY package*.json ./
 RUN npm ci
 COPY prisma ./prisma
